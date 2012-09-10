@@ -8,13 +8,13 @@
     %= tag th => "Name"
     %= tag th => "Title"
     %= tag th => "Author"
-    %= tag th => "Show"
-    %= tag th => "Edit"
+    %= tag th => "Actions"
   %= end
   % while (my $page = $pages->next) {
     % my $name = $page->name;
-    %= tag tr => begin
-      %= tag td => $page->page_id
+    % my $id = $page->page_id;
+    %= tag tr => id => "row-$id" => begin
+      %= tag td => $id
       %= tag td => $name
       %= tag td => $page->title
       % my $author = $page->author->name;
@@ -22,11 +22,38 @@
         %= tag a => href => "/admin/user/$author" => "$author"
       %= end
       %= tag td => begin
-        %= tag a => href => "/page/$name" => "Show"
-      %= end
-      %= tag td => begin
-        %= tag a => href => "/edit/$name" => "Edit"
+        <div class="btn-group">
+          <a class="btn" href="<%= qq{/page/$name} %>"><i class="icon-eye-open"></i></a>
+          <a class="btn" href="<%= qq{/edit/$name} %>"><i class="icon-pencil"></i></a>
+          <a class="btn" href="#" onclick="confirm_delete('<%= $id %>', '<%= $name %>')">
+            <i class="icon-trash"></i>
+          </a>
+        </div>
       %= end
     %= end
   % }
+%= end
+
+%= javascript begin
+function confirm_delete(id, name) {
+  show_modal(
+    'Are you sure that you want to delete the page "' + name + '"',
+    function(){ delete_page(id) }
+  );
+}
+
+function delete_page(id) {
+  ws = new WebSocket( '<%= url_for("removepage")->to_abs %>' );
+  ws.onmessage = function (evt) {
+    var data = JSON.parse(evt.data);
+    //console.log( data );
+    humane.log( data.message );
+    if ( data.success ) {
+      $( '#row-' + id ).remove();
+    }
+  };
+  ws.onopen = function () {
+    ws.send( id );
+  };
+}
 %= end
