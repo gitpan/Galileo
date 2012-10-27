@@ -1,7 +1,7 @@
 package Galileo;
 use Mojo::Base 'Mojolicious';
 
-our $VERSION = 0.007;
+our $VERSION = 0.008;
 $VERSION = eval $VERSION;
 
 use File::Basename 'dirname';
@@ -57,6 +57,7 @@ sub startup {
         undef,
         { sqlite_unicode => 1 },
       ],
+      sanitize => 1,
       secret => 'MySecret',
     },
   });

@@ -1,4 +1,5 @@
 % layout 'standard';
+% my $sanitize = stash('sanitize') // 1 ? 'true' : 'false';
 % content_for header => begin
   %= stylesheet '/assets/pagedown/demo.css'
   %= javascript '/assets/pagedown/Markdown.Converter.js'
@@ -8,30 +9,16 @@
 % end
 
 %= javascript begin
-data = {
-  name  : "<%= $name  %>",
-  md    : "",
-  html  : "",
-  title : ""
-};
+
+var editor;
 
 function saveButton() {
-  data.title = $("#page-title").val();
-  sendViaWS("<%= url_for('storepage')->to_abs %>", data);
+  var title = $("#page-title").val();
+  editor.save( title );
 }
 
 $(function () {
-  var converter = Markdown.getSanitizingConverter();
-  var editor = new Markdown.Editor(converter);
-  converter.hooks.chain("preConversion", function (text) {
-    data.md = text;
-    return text; 
-  });
-  converter.hooks.chain("postConversion", function (text) {
-    data.html = text;
-    return text; 
-  });
-  editor.run();
+  editor = new Editor("<%= $name =%>", "<%= url_for('storepage')->to_abs =%>", <%= $sanitize =%>);
 });
 
 %= end
