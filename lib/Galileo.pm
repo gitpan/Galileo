@@ -1,7 +1,7 @@
 package Galileo;
 use Mojo::Base 'Mojolicious';
 
-our $VERSION = 0.008;
+our $VERSION = 0.009;
 $VERSION = eval $VERSION;
 
 use File::Basename 'dirname';
@@ -23,7 +23,7 @@ has db => sub {
   return $schema;
 };
 
-has home_path => $ENV{GALILEO_HOME} || getcwd;
+has home_path => sub { $ENV{GALILEO_HOME} || getcwd };
 
 has config_file => sub {
   my $self = shift;
@@ -57,6 +57,7 @@ sub startup {
         undef,
         { sqlite_unicode => 1 },
       ],
+      files => 'static',
       sanitize => 1,
       secret => 'MySecret',
     },
@@ -73,10 +74,18 @@ sub startup {
     $app->renderer->paths->[0] = -d $templates ? $templates : catdir(dist_dir('Galileo'), 'templates');
   }
 
+  {
+    # add the files directory to array of static content folders
+    my $dir = $app->home->rel_dir( $app->config->{files} );
+    push @{ $app->static->paths }, $dir if -d $dir;
+  }
+
   # use commands from Galileo::Command namespace
   push @{$app->commands->namespaces}, 'Galileo::Command';
 
   $app->secret( $app->config->{secret} );
+
+  ## Helpers ##
 
   $app->helper( schema => sub { shift->app->db } );
 
@@ -143,6 +152,8 @@ sub startup {
       return $mem{$name}{content} = $cb->();
     }
   );
+
+  ## Routing ##
 
   my $r = $app->routes;
 
@@ -259,6 +270,10 @@ where you may replace C<hypnotoad> with your server of choice.
 =head2 Logging
 
 Logging in L<Galileo> is the same as in L<Mojolicious|Mojolicious::Lite/Logging>. Messages will be printed to C<STDERR> unless a directory named F<log> exists in the C<GALILEO_HOME> path, in which case messages will be logged to a file in that directory.
+
+=head2 Static Files Folder
+
+If Galileo detects a folder named F<static> inside the C<GALILEO_HOME> path, that path is added to the list of folders for serving static files. The name of this folder may be changed in the configuration file via the key C<files>.
 
 =head1 TECHNOLOGIES USED
 
