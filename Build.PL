@@ -10,12 +10,13 @@ my $builder = Module::Build->new(
   license => 'perl',
   
   requires => {
-    'perl' => '5.8.0',
-    'Mojolicious' => '3.0',
+    'perl' => '5.10.1',
+    'Mojolicious' => '3.80',  # need j and json_message_content_is and message_ok
     'DBD::SQLite' => 0,
     'DBIx::Class' => 0,
     'DBIx::Class::Candy' => 0,
     'DBIx::Class::EncodedColumn' => 0,
+    'DBIx::Class::DeploymentHandler' => 0,
     'Crypt::Eksblowfish::Bcrypt' => 0,
     'SQL::Translator' => 0,
     'Term::Prompt' => 0,

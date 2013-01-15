@@ -18,7 +18,7 @@ no_index:
 provides:
   Galileo:
     file: lib/Galileo.pm
-    version: 0.011
+    version: 0.012
   Galileo::Admin:
     file: lib/Galileo/Admin.pm
     version: 0
@@ -28,9 +28,12 @@ provides:
   Galileo::Command::setup:
     file: lib/Galileo/Command/setup.pm
     version: 0
+  Galileo::DB::Deploy:
+    file: lib/Galileo/DB/Deploy.pm
+    version: 0
   Galileo::DB::Schema:
     file: lib/Galileo/DB/Schema.pm
-    version: 0
+    version: 2
   Galileo::DB::Schema::Result::Menu:
     file: lib/Galileo/DB/Schema/Result/Menu.pm
     version: 0
@@ -54,14 +57,15 @@ requires:
   DBD::SQLite: 0
   DBIx::Class: 0
   DBIx::Class::Candy: 0
+  DBIx::Class::DeploymentHandler: 0
   DBIx::Class::EncodedColumn: 0
   File::ShareDir: 1.00
-  Mojolicious: 3.0
+  Mojolicious: 3.80
   SQL::Translator: 0
   Term::Prompt: 0
-  perl: v5.8.0
+  perl: v5.10.1
 resources:
   bugtracker: http://github.com/jberger/Galileo/issues
   license: http://dev.perl.org/licenses/
   repository: http://github.com/jberger/Galileo
-version: 0.011
+version: 0.012
