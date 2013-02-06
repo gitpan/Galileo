@@ -1,7 +1,7 @@
 package Galileo;
 use Mojo::Base 'Mojolicious';
 
-our $VERSION = '0.018';
+our $VERSION = '0.019';
 $VERSION = eval $VERSION;
 
 use File::Basename 'dirname';
@@ -292,7 +292,9 @@ If Galileo detects a folder named F<static> inside the C<GALILEO_HOME> path, tha
 
 =head1 CUSTOMIZING
 
-L<Galileo> doesn't have too much in the way of theming or customization as yet, however the L</config> keys C<extra_css> and C<extra_js> take array references pointing to CSS or Javascript files (respectively) within a L<static directory|/"Static files folder">.
+The L</config> keys C<extra_css> and C<extra_js> take array references pointing to CSS or Javascript files (respectively) within a L<static directory|/"Static files folder">. As an example, the default C<extra_css> key contains the path to a simple theme css file which adds a gray background and border to the main container.
+
+As yet there are no widgets/plugins as such, however a clever bit of javascript might be able to load something. 
 
 =head1 ADDITIONAL COMMANDS
 
