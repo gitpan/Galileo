@@ -1,7 +1,7 @@
 package Galileo;
 use Mojo::Base 'Mojolicious';
 
-our $VERSION = '0.017';
+our $VERSION = '0.018';
 $VERSION = eval $VERSION;
 
 use File::Basename 'dirname';
@@ -57,7 +57,7 @@ sub startup {
         undef,
         { sqlite_unicode => 1 },
       ],
-      extra_css => [],
+      extra_css => [ '/themes/standard.css' ],
       extra_js => [],
       files => 'static',
       sanitize => 1,
