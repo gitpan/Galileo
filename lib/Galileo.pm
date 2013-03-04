@@ -1,7 +1,7 @@
 package Galileo;
 use Mojo::Base 'Mojolicious';
 
-our $VERSION = '0.022';
+our $VERSION = '0.023';
 $VERSION = eval $VERSION;
 
 use File::Basename 'dirname';
@@ -14,11 +14,9 @@ has db => sub {
   my $schema_class = $self->config->{db_schema} or die "Unknown DB Schema Class";
   eval "require $schema_class" or die "Could not load Schema Class ($schema_class). $@\n";
 
-  my $db_connect = $self->config->{db_connect} or die "No DBI connection string provided";
-  my @db_connect = ref $db_connect ? @$db_connect : ( $db_connect );
-
-  my $schema = $schema_class->connect( @db_connect ) 
-    or die "Could not connect to $schema_class using $db_connect[0]";
+  my $schema = $schema_class->connect( 
+    @{ $self->config }{ qw/db_dsn db_username db_password db_options/ }
+  ) or die "Could not connect to $schema_class using DSN " . $self->config->{db_dsn};
 
   return $schema;
 };
@@ -31,6 +29,59 @@ has config_file => sub {
 
   return rel2abs( 'galileo.conf', $self->home_path );
 };
+
+sub load_config {
+  my $app = shift;
+
+  $app->plugin( Config => { 
+    file => $app->config_file,
+    default => {
+      db_schema  => 'Galileo::DB::Schema',
+      db_dsn => 'dbi:SQLite:dbname=' . $app->home->rel_file( 'galileo.db' ),
+      db_username => undef,
+      db_password => undef,
+      db_options => { sqlite_unicode => 1 },
+      extra_css => [ '/themes/standard.css' ],
+      extra_js => [],
+      files => ['static'],
+      sanitize => 1,
+      secret => '', # default to null (unset) in case I implement an iterative config helper
+    },
+  });
+
+  # handle deprecated db_connect
+  if ( my $db_connect = delete $app->config->{db_connect} ) {
+    warn "### Configuration key db_connect is deprecated ###\n";
+    if ( ref $db_connect ) {
+      @{ $app->config }{ qw/db_dsn db_username db_password db_options/ } = @$db_connect;
+    } else {
+      $app->config->{db_dsn} = $db_connect;
+    }
+  }
+
+  # upgrade deprecated string keys for files to an arrayref
+  {
+    my $value = $app->config->{files};
+    unless ( ref $value ) {
+      warn "### String value for 'files' config key is deprecated (use arrayref of strings) ###\n"; 
+      $app->config->{files} = [ $value ];
+    }
+  }
+
+  # add the files directories to array of static content folders
+  # TODO don't repeat
+  foreach my $dir ( @{$app->config->{files}} ) {
+    # convert relative paths to relative one (to home dir)
+    unless ( File::Spec->file_name_is_absolute( $dir ) ) {
+      $dir = $app->home->rel_dir( $dir );
+    }
+    push @{ $app->static->paths }, $dir if -d $dir;
+  }
+
+  if ( my $secret = $app->config->{secret} ) {
+    $app->secret( $secret );
+  }
+}
 
 sub startup {
   my $app = shift;
@@ -47,23 +98,7 @@ sub startup {
       if -w $app->home->rel_file('log');
   }
 
-  $app->plugin( Config => { 
-    file => $app->config_file,
-    default => {
-      db_schema  => 'Galileo::DB::Schema',
-      db_connect => [
-        'dbi:SQLite:dbname=' . $app->home->rel_file( 'galileo.db' ),
-        undef,
-        undef,
-        { sqlite_unicode => 1 },
-      ],
-      extra_css => [ '/themes/standard.css' ],
-      extra_js => [],
-      files => 'static',
-      sanitize => 1,
-      secret => '', # default to null (unset) in case I implement an iterative config helper
-    },
-  });
+  $app->load_config;
 
   {
     # use content from directories under lib/Galileo/files or using File::ShareDir
@@ -76,18 +111,8 @@ sub startup {
     $app->renderer->paths->[0] = -d $templates ? $templates : catdir(dist_dir('Galileo'), 'templates');
   }
 
-  {
-    # add the files directory to array of static content folders
-    my $dir = $app->home->rel_dir( $app->config->{files} );
-    push @{ $app->static->paths }, $dir if -d $dir;
-  }
-
   # use commands from Galileo::Command namespace
   push @{$app->commands->namespaces}, 'Galileo::Command';
-
-  if ( my $secret = $app->config->{secret} ) {
-    $app->secret( $secret );
-  }
 
   ## Helpers ##
 
@@ -157,6 +182,11 @@ sub startup {
     }
   );
 
+  $app->helper( expire => sub {
+    my ($self, $name) = @_;
+    $self->flex_memorize->{$name}{expires} = 1;
+  });
+
   ## Routing ##
 
   my $r = $app->routes;
@@ -174,10 +204,10 @@ sub startup {
     return 1;
   });
 
-  $if_author->any( '/admin/menu' )->to('edit#edit_menu');
-  $if_author->any( '/edit/:name' )->to('edit#edit_page');
-  $if_author->websocket( '/store/page' )->to('edit#store_page');
-  $if_author->websocket( '/store/menu' )->to('edit#store_menu');
+  $if_author->any( '/admin/menu' )->to('menu#edit');
+  $if_author->any( '/edit/:name' )->to('page#edit');
+  $if_author->websocket( '/store/page' )->to('page#store');
+  $if_author->websocket( '/store/menu' )->to('menu#store');
 
   my $if_admin = $r->under( sub {
     my $self = shift;
@@ -249,27 +279,28 @@ Use L<Mojolicious::Plugin::ConsoleLogger> to get additional state information an
 
 =head2 The F<galileo> command line application
 
-L<Galileo> installs a command line application, C<galileo>. It inherits from the L<mojo> command, but it provides extra functions specifically for use with Galileo.
-
-=head3 config
-
- $ galileo config [options]
-
-This command writes a configuration file in your C<GALILEO_HOME> path. It uses the preset defaults for all values, except that it prompts for a secret. This can be any string, however stronger is better. You do not need to memorize it or remember it. This secret protects the cookies employed by Galileo from being tampered with on the client side.
-
-L<Galileo> does not need to be configured, however it is recommended to do so to set your application's secret. 
-
-The C<--force> option may be passed to overwrite any configuration file in the current working directory. The default is to die if such a configuration file is found.
+L<Galileo> installs a command line application, C<galileo>. It inherits from the L<mojo> command and so provides all those commands, but it provides extra functions specifically for use with Galileo.
 
 =head3 setup
 
  $ galileo setup
 
-This step is required after both installation and upgrading Galileo. Running C<galileo setup> will deploy or upgrade the database used by your Galileo site. It will use the default DBI settings (SQLite) or whatever is setup in the C<GALILEO_CONFIG> configuration file.
+This command starts the app in setup mode. It can write a configuration file, and setup or upgrade the database.
 
-Warning: As usual, proper care should be taken when upgrading a database. This mechanism is rather new and while it should be safe, the author makes no promises about anything yet! Backup all files before upgrading!
+This step is required after both installation and upgrading Galileo, because the database page will deploy or upgrade the database used by your Galileo site. It will use the default DBI settings (SQLite) or whatever is setup in the C<GALILEO_CONFIG> configuration file.
 
-Note that the database deployment tools may emit debugging information unexpectedly, especially messages about "overwriting" and some internal "peek" information. These message are harmless, but as yet cannot be suppressed. 
+Warning: As usual, proper care should be taken when upgrading a database. This mechanism is rather new and while it should be safe, the author makes no promises about anything yet! Backup files and database before upgrading!
+
+Although L<Galileo> does not need to be configured, it is recommended to do so to set your application's secret. The secret can be any string, however stronger is better. You do not need to memorize it or even remember it. This secret protects the cookies employed by Galileo from being tampered with on the client side.
+
+Note that the database deployment tools may emit debugging information unexpectedly to your terminal, especially messages about "overwriting" and some internal "peek" information. These message are harmless, but as yet cannot be suppressed. 
+
+=head3 dump
+
+ $ galileo dump
+ $ galileo dump --directory pages -t 
+
+This tool dumps all the pages in your galileo site as markdown files. The directory for exporting to may be specifed with the C<--directory> or C<-d> flag, by default it exports to the current working directory. The title of the page is by default includes as an HTML comment. To include the title as an C<< <h1> >> level directive pass C<--title> or C<-t> without an option. Any other option given to C<--title> will be used as an C<sprintf> format for rendering the title (at the top of the article).
 
 =head1 RUNNING THE APPLICATION
 
@@ -287,26 +318,15 @@ where you may replace C<hypnotoad> with your server of choice.
 
 Logging in L<Galileo> is the same as in L<Mojolicious|Mojolicious::Lite/Logging>. Messages will be printed to C<STDERR> unless a directory named F<log> exists in the C<GALILEO_HOME> path, in which case messages will be logged to a file in that directory.
 
-=head2 Static files folder
+=head2 Static files folders
 
-If Galileo detects a folder named F<static> inside the C<GALILEO_HOME> path, that path is added to the list of folders for serving static files. The name of this folder may be changed in the configuration file via the key C<files>.
+By default, if Galileo detects a folder named F<static> inside the C<GALILEO_HOME> path, that path is added to the list of folders for serving static files. The name of this folder may be changed in the configuration file via the key C<files>, which expects an array reference of strings representing paths. If the path is relative it will be relative to C<GALILEO_HOME>.
 
 =head1 CUSTOMIZING
 
 The L</config> keys C<extra_css> and C<extra_js> take array references pointing to CSS or Javascript files (respectively) within a L<static directory|/"Static files folder">. As an example, the default C<extra_css> key contains the path to a simple theme css file which adds a gray background and border to the main container.
 
 As yet there are no widgets/plugins as such, however a clever bit of javascript might be able to load something. 
-
-=head1 ADDITIONAL COMMANDS
-
-The C<galileo> command-line tool also provides all of the commands that Mojolicious' L<mojo> tool does. This includes C<daemon> which has already been introduced. It also provides several Galileo specific commands. In addition to L<config> and L<setup> which have already been discussed, there are:
-
-=head2 dump
-
- $ galileo dump
- $ galileo dump --directory pages -t 
-
-This tool dumps all the pages in your galileo site as markdown files. The directory for exporting to may be specifed with the C<--directory> or C<-d> flag, by default it exports to the current working directory. The title of the page is by default includes as an HTML comment. To include the title as an C<< <h1> >> level directive pass C<--title> or C<-t> without an option. Any other option given to C<--title> will be used as an C<sprintf> format for rendering the title (at the top of the article).
 
 =head1 TECHNOLOGIES USED
 
