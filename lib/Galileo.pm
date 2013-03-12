@@ -1,7 +1,7 @@
 package Galileo;
 use Mojo::Base 'Mojolicious';
 
-our $VERSION = '0.023';
+our $VERSION = '0.024';
 $VERSION = eval $VERSION;
 
 use File::Basename 'dirname';
@@ -21,7 +21,10 @@ has db => sub {
   return $schema;
 };
 
-has home_path => sub { $ENV{GALILEO_HOME} || getcwd };
+has home_path => sub {
+  my $path = $ENV{GALILEO_HOME} || getcwd;
+  return File::Spec->rel2abs($path);
+};
 
 has config_file => sub {
   my $self = shift;
@@ -43,9 +46,10 @@ sub load_config {
       db_options => { sqlite_unicode => 1 },
       extra_css => [ '/themes/standard.css' ],
       extra_js => [],
-      files => ['static'],
+      extra_static_paths => ['static'],
       sanitize => 1,
       secret => '', # default to null (unset) in case I implement an iterative config helper
+      upload_path => 'uploads',
     },
   });
 
@@ -59,28 +63,44 @@ sub load_config {
     }
   }
 
-  # upgrade deprecated string keys for files to an arrayref
-  {
-    my $value = $app->config->{files};
-    unless ( ref $value ) {
-      warn "### String value for 'files' config key is deprecated (use arrayref of strings) ###\n"; 
-      $app->config->{files} = [ $value ];
-    }
+  # handle deprecated files key
+  if (my $files = $app->config->{files}) {
+    warn "### 'files' config key is deprecated, use extra_static_paths ###\n"; 
+    push @{ $app->config->{exta_static_paths} }, (ref $files ? @$files : $files);
   }
 
   # add the files directories to array of static content folders
   # TODO don't repeat
-  foreach my $dir ( @{$app->config->{files}} ) {
+  foreach my $dir ( @{$app->config->{extra_static_paths}} ) {
     # convert relative paths to relative one (to home dir)
-    unless ( File::Spec->file_name_is_absolute( $dir ) ) {
-      $dir = $app->home->rel_dir( $dir );
-    }
+    $dir = $app->_to_abs($dir);
     push @{ $app->static->paths }, $dir if -d $dir;
+  }
+
+  # normalize and make helper for upload directory
+  my $upload;
+  if ( my $dir = $app->config->{upload_path} ) {
+    $upload = $app->_to_abs($dir);
+  }
+  if ( -d $upload ) {
+    push @{ $app->static->paths }, $upload;
+    $app->config->{upload_path} = $upload;
+    $app->helper( upload_path => sub { $upload } );
+  } else {
+    $app->helper( upload_path => sub { 0 } );
   }
 
   if ( my $secret = $app->config->{secret} ) {
     $app->secret( $secret );
   }
+}
+
+sub _to_abs {
+  my ($self, $dir) = @_;
+  unless ( File::Spec->file_name_is_absolute( $dir ) ) {
+    $dir = $self->home->rel_dir( $dir );
+  }
+  return $dir;
 }
 
 sub startup {
@@ -208,6 +228,7 @@ sub startup {
   $if_author->any( '/edit/:name' )->to('page#edit');
   $if_author->websocket( '/store/page' )->to('page#store');
   $if_author->websocket( '/store/menu' )->to('menu#store');
+  $if_author->websocket( '/files/list' )->to('file#list');
 
   my $if_admin = $r->under( sub {
     my $self = shift;
@@ -318,9 +339,15 @@ where you may replace C<hypnotoad> with your server of choice.
 
 Logging in L<Galileo> is the same as in L<Mojolicious|Mojolicious::Lite/Logging>. Messages will be printed to C<STDERR> unless a directory named F<log> exists in the C<GALILEO_HOME> path, in which case messages will be logged to a file in that directory.
 
-=head2 Static files folders
+=head2 Extra Static Paths
 
-By default, if Galileo detects a folder named F<static> inside the C<GALILEO_HOME> path, that path is added to the list of folders for serving static files. The name of this folder may be changed in the configuration file via the key C<files>, which expects an array reference of strings representing paths. If the path is relative it will be relative to C<GALILEO_HOME>.
+By default, if Galileo detects a folder named F<static> inside the C<GALILEO_HOME> path, that path is added to the list of folders for serving static files. The name of this folder may be changed in the configuration file via the key C<extra_static_paths>, which expects an array reference of strings representing paths. If any path is relative it will be relative to C<GALILEO_HOME>.
+
+=head2 Upload Path
+
+By default, if Galileo detects a folder named F<uploads> inside the C<GALILEO_HOME> path, that path is used for uploads, specifically user-uploaded images. This path is added to the static files. The name of this folder may be changed in the configuration file via the key C<upload_path>, which expects a string representing the path. If the path is relative it will be relative to C<GALILEO_HOME>.
+
+NOTE: as for this writing, this option doesn't do anything but append to the static files paths. Eventually it will be where uploads go, but NOT YET!
 
 =head1 CUSTOMIZING
 
