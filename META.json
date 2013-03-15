@@ -33,6 +33,7 @@
             "DBIx::Class::DeploymentHandler" : "0",
             "DBIx::Class::EncodedColumn" : "0",
             "File::Copy::Recursive" : "0",
+            "File::Next" : "0",
             "File::ShareDir" : "1.00",
             "Mojolicious" : "3.85",
             "Mojolicious::Plugin::Humane" : "0.04",
@@ -45,7 +46,7 @@
    "provides" : {
       "Galileo" : {
          "file" : "lib/Galileo.pm",
-         "version" : "0.025"
+         "version" : "0.026"
       },
       "Galileo::Admin" : {
          "file" : "lib/Galileo/Admin.pm",
@@ -108,5 +109,5 @@
          "url" : "http://github.com/jberger/Galileo"
       }
    },
-   "version" : "0.025"
+   "version" : "0.026"
 }
