@@ -1,7 +1,7 @@
 package Galileo;
 use Mojo::Base 'Mojolicious';
 
-our $VERSION = '0.026';
+our $VERSION = '0.027';
 $VERSION = eval $VERSION;
 
 use File::Basename 'dirname';
@@ -397,7 +397,15 @@ L<Contenticious> - File-based Markdown website application
 
 =head1 SOURCE REPOSITORY
 
-L<http://github.com/jberger/Galileo>
+L<http://github.com/jberger/Galileo> 
+
+=begin html
+
+<p>
+  <img src="https://travis-ci.org/jberger/Galileo.png?branch=master" alt="Travis CI build status">
+</p>
+
+=end html
 
 =head1 AUTHOR
 
