@@ -35,9 +35,8 @@ sub edit {
 
 sub store {
   my $self = shift;
-  $self->on( text => sub {
-    my ($self, $message) = @_;
-    my $data = j($message);
+  $self->on( json => sub {
+    my ($self, $data) = @_;
     my $name = $data->{name};
     my $list = $data->{list};
 
@@ -55,11 +54,11 @@ sub store {
       { key => $name }
     );
 
-    $self->expire($name);
-    $self->send({ text => j({
+    $self->memorize->expire($name);
+    $self->send({ json => {
       message => 'Changes saved',
       success => \1,
-    }) });
+    } });
   });
 }
 

@@ -35,8 +35,9 @@
             "File::Copy::Recursive" : "0",
             "File::Next" : "0",
             "File::ShareDir" : "1.00",
-            "Mojolicious" : "3.92",
+            "Mojolicious" : "4.0",
             "Mojolicious::Plugin::Humane" : "0.04",
+            "Mojolicious::Plugin::Memorize" : "0",
             "SQL::Translator" : "0",
             "Term::Prompt" : "0",
             "perl" : "v5.10.1"
@@ -46,7 +47,7 @@
    "provides" : {
       "Galileo" : {
          "file" : "lib/Galileo.pm",
-         "version" : "0.029"
+         "version" : "0.030"
       },
       "Galileo::Admin" : {
          "file" : "lib/Galileo/Admin.pm",
@@ -92,10 +93,6 @@
          "file" : "lib/Galileo/Page.pm",
          "version" : 0
       },
-      "Galileo::Plugin::FlexMemorize" : {
-         "file" : "lib/Galileo/Plugin/FlexMemorize.pm",
-         "version" : 0
-      },
       "Galileo::Plugin::Modal" : {
          "file" : "lib/Galileo/Plugin/Modal.pm",
          "version" : 0
@@ -117,5 +114,5 @@
          "url" : "http://github.com/jberger/Galileo"
       }
    },
-   "version" : "0.029"
+   "version" : "0.030"
 }
