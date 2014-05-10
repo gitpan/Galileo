@@ -1,7 +1,7 @@
 package Galileo;
 use Mojo::Base 'Mojolicious';
 
-our $VERSION = '0.032';
+our $VERSION = '0.033';
 $VERSION = eval $VERSION;
 
 use File::Basename 'dirname';
@@ -66,7 +66,7 @@ sub load_config {
   # handle deprecated files key
   if (my $files = $app->config->{files}) {
     warn "### 'files' config key is deprecated, use extra_static_paths ###\n"; 
-    push @{ $app->config->{exta_static_paths} }, (ref $files ? @$files : $files);
+    push @{ $app->config->{extra_static_paths} }, (ref $files ? @$files : $files);
   }
 
   # add the files directories to array of static content folders
@@ -290,8 +290,13 @@ Note that the database deployment tools may emit debugging information unexpecte
 
  $ galileo dump
  $ galileo dump --directory pages -t 
+ $ galileo dump --directory pages -t --encoding utf-8
 
-This tool dumps all the pages in your galileo site as markdown files. The directory for exporting to may be specifed with the C<--directory> or C<-d> flag, by default it exports to the current working directory. The title of the page is by default includes as an HTML comment. To include the title as an C<< <h1> >> level directive pass C<--title> or C<-t> without an option. Any other option given to C<--title> will be used as an C<sprintf> format for rendering the title (at the top of the article).
+This tool dumps all the pages in your galileo site as markdown files. The directory for exporting to may be specifed with the C<--directory> or C<-d> flag, by default it exports to the current working directory.
+
+The title of the page is by default includes as an HTML comment. To include the title as an C<< <h1> >> level directive pass C<--title> or C<-t> without an option. Any other option given to C<--title> will be used as an C<sprintf> format for rendering the title (at the top of the article). 
+
+The document will be encoded as UTF-8 by default, if other encoding of the content is desired, use C<--encoding> or C<-e> flag. Available value of the C<--encoding> is same as L<Encode> module of Perl.
 
 =head1 RUNNING THE APPLICATION
 
