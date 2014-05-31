@@ -4,7 +4,7 @@
       "Joel Berger"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4203",
+   "generated_by" : "Module::Build version 0.4205",
    "license" : [
       "perl_5"
    ],
@@ -36,7 +36,7 @@
             "File::Next" : "0",
             "File::ShareDir" : "1.00",
             "Mojolicious" : "4.63",
-            "Mojolicious::Plugin::Humane" : "0.04",
+            "Mojolicious::Plugin::Humane" : "0.07",
             "Mojolicious::Plugin::Memorize" : "0",
             "SQL::Translator" : "0",
             "Term::Prompt" : "0",
@@ -47,7 +47,7 @@
    "provides" : {
       "Galileo" : {
          "file" : "lib/Galileo.pm",
-         "version" : "0.033"
+         "version" : "0.034"
       },
       "Galileo::Admin" : {
          "file" : "lib/Galileo/Admin.pm"
@@ -102,5 +102,5 @@
          "url" : "http://github.com/jberger/Galileo"
       }
    },
-   "version" : "0.033"
+   "version" : "0.034"
 }
