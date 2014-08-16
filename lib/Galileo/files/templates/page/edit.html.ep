@@ -1,10 +1,12 @@
 % layout 'standard';
 % my $sanitize = stash('sanitize') // 1 ? 'true' : 'false';
+% my $pagedown_extra_options = stash('pagedown_extra_options');
 % content_for header => begin
   %= stylesheet '/assets/pagedown/pagedown.css'
   %= javascript '/assets/pagedown/Markdown.Converter.js'
   %= javascript '/assets/pagedown/Markdown.Sanitizer.js'
   %= javascript '/assets/pagedown/Markdown.Editor.js'
+  %= javascript '/assets/pagedown-extra/Markdown.Extra.js'
   %= javascript '/galileo-edit.js'
 % end
 
@@ -17,11 +19,13 @@ function saveButton() {
   editor.save( title );
 }
 
+var extraOptions = <%== $pagedown_extra_options %>;
+
 $(function () {
-  editor = new Editor("<%= $name =%>", "<%= url_for('storepage')->to_abs =%>", <%= $sanitize =%>);
+  editor = new Editor("<%= $name =%>", "<%= url_for('storepage')->to_abs =%>", <%= $sanitize =%>, extraOptions);
 });
 
-%= end
+% end
 
 <div class="wmd-panel">
   <div class="well form-inline">
