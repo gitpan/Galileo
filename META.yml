@@ -18,7 +18,7 @@ no_index:
 provides:
   Galileo:
     file: lib/Galileo.pm
-    version: '0.035'
+    version: '0.036'
   Galileo::Admin:
     file: lib/Galileo/Admin.pm
   Galileo::Command::dump:
@@ -60,10 +60,9 @@ requires:
   Mojolicious::Plugin::Humane: '0.07'
   Mojolicious::Plugin::Memorize: '0'
   SQL::Translator: '0'
-  Term::Prompt: '0'
   perl: v5.10.1
 resources:
   bugtracker: http://github.com/jberger/Galileo/issues
   license: http://dev.perl.org/licenses/
   repository: http://github.com/jberger/Galileo
-version: '0.035'
+version: '0.036'

@@ -41,6 +41,11 @@ lib/Galileo/files/templates/menu/edit.html.ep
 lib/Galileo/files/templates/nav_menu.html.ep
 lib/Galileo/files/templates/page/edit.html.ep
 lib/Galileo/files/templates/page/show.html.ep
+lib/Galileo/files/templates/setup/configure.html.ep
+lib/Galileo/files/templates/setup/control_group.html.ep
+lib/Galileo/files/templates/setup/database.html.ep
+lib/Galileo/files/templates/setup/finish.html.ep
+lib/Galileo/files/templates/setup/welcome.html.ep
 lib/Galileo/files/templates/user_menu.html.ep
 lib/Galileo/Menu.pm
 lib/Galileo/Page.pm
