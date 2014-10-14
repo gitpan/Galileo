@@ -1,7 +1,7 @@
 package Galileo;
 use Mojo::Base 'Mojolicious';
 
-our $VERSION = '0.036';
+our $VERSION = '0.037';
 $VERSION = eval $VERSION;
 
 use File::Basename 'dirname';
@@ -292,7 +292,19 @@ Warning: As usual, proper care should be taken when upgrading a database. This m
 
 Although L<Galileo> does not need to be configured, it is recommended to do so to set your application's secret. The secret can be any string, however stronger is better. You do not need to memorize it or even remember it. This secret protects the cookies employed by Galileo from being tampered with on the client side.
 
-Note that the database deployment tools may emit debugging information unexpectedly to your terminal, especially messages about "overwriting" and some internal "peek" information. These message are harmless, but as yet cannot be suppressed. 
+Notes:
+
+=over 
+
+=item *
+
+The database deployment tools may emit debugging information unexpectedly to your terminal, especially messages about "overwriting" and some internal "peek" information. These message are harmless, but as yet cannot be suppressed. 
+
+=item *
+
+Upgrading database schemas from before Galileo version 0.012 (when schema versioning was introduced) is no longer supported as of version 0.037. The process wasn't testable anyway.
+
+=back
 
 =head3 dump
 
@@ -400,7 +412,7 @@ Joel Berger, E<lt>joel.a.berger@gmail.comE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2012-2013 by Joel Berger
+Copyright (C) 2012-2014 by Joel Berger
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

@@ -49,6 +49,7 @@ lib/Galileo/files/templates/setup/welcome.html.ep
 lib/Galileo/files/templates/user_menu.html.ep
 lib/Galileo/Menu.pm
 lib/Galileo/Page.pm
+lib/Galileo/Plugin/Deploy.pm
 lib/Galileo/Plugin/Modal.pm
 lib/Galileo/User.pm
 MANIFEST			This list of files

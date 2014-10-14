@@ -46,7 +46,7 @@
    "provides" : {
       "Galileo" : {
          "file" : "lib/Galileo.pm",
-         "version" : "0.036"
+         "version" : "0.037"
       },
       "Galileo::Admin" : {
          "file" : "lib/Galileo/Admin.pm"
@@ -82,6 +82,9 @@
       "Galileo::Page" : {
          "file" : "lib/Galileo/Page.pm"
       },
+      "Galileo::Plugin::Deploy" : {
+         "file" : "lib/Galileo/Plugin/Deploy.pm"
+      },
       "Galileo::Plugin::Modal" : {
          "file" : "lib/Galileo/Plugin/Modal.pm"
       },
@@ -101,5 +104,5 @@
          "url" : "http://github.com/jberger/Galileo"
       }
    },
-   "version" : "0.036"
+   "version" : "0.037"
 }
